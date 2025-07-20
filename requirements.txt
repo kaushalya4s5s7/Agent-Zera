@@ -1,0 +1,13 @@
+iointel>=0.1.0
+pydantic>=2.0.0
+asyncio
+pandas
+numpy
+matplotlib
+seaborn
+pyyaml
+python-dotenv
+rich
+aiosqlite
+streamlit
+plotly
