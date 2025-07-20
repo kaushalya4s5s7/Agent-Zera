@@ -12,6 +12,11 @@ ZERA is an advanced AI-powered tool for comprehensive smart contract auditing, f
 
 ## 🧠 Architecture & Process Flows
 
+### Auditing Agent Conceptual Flow
+
+[Conceptual Flow](https://raw.githubusercontent.com/kaushalya4s5s7/Agent-Zera/refs/heads/main/img/Screenshot%202025-07-20%20at%203.14.56%E2%80%AFPM.png)
+
+
 ### Agentic Flow with Learning
 
 ```mermaid
