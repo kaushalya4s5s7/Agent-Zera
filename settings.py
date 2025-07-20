@@ -2,10 +2,39 @@ from pydantic import BaseModel
 from typing import Optional
 import os
 
+# Try to import streamlit to check for secrets
+try:
+    import streamlit as st
+    STREAMLIT_AVAILABLE = True
+except ImportError:
+    STREAMLIT_AVAILABLE = False
+
+def get_secret(key: str, default: Optional[str] = None) -> Optional[str]:
+    """Get secret from Streamlit secrets or environment variables"""
+    # First try Streamlit secrets (for local development)
+    if STREAMLIT_AVAILABLE:
+        try:
+            return st.secrets.get(key, os.getenv(key, default))
+        except:
+            # Fallback to environment variables if secrets not available
+            return os.getenv(key, default)
+    else:
+        # Fallback to environment variables
+        return os.getenv(key, default)
+
 class Settings(BaseModel):
-    # API Configuration
-    api_key: Optional[str] = "io-v2-eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJvd25lciI6IjFkY2YyZjI1LTI2MGItNDk3NC1iNmI3LWMzYmUyMzVhZmMwZCIsImV4cCI6NDkwNjQyOTA4MH0.ATps5dX6OhDOHdRW0M1HpH6RBYQ0DGMywXUAiNKN0yg0xvU3meN_TP0sU7WPXiPJh3erGm5ZcsIZY-ND2lP19A"
-    base_url: Optional[str] = "https://api.intelligence.io.solutions/api/v1"
+    # API Configuration - Use environment variables and Streamlit secrets
+    api_key: Optional[str] = None
+    base_url: Optional[str] = None
+    
+    def __init__(self, **data):
+        # Get secrets dynamically
+        if not data.get('api_key'):
+            data['api_key'] = get_secret('API_KEY')
+        if not data.get('base_url'):
+            data['base_url'] = get_secret('BASE_URL', 'https://api.intelligence.io.solutions/api/v1')
+        
+        super().__init__(**data)
     
     # Zera Agent Configuration
     default_model: str = "mistralai/Mistral-Large-Instruct-2411"  # Using supported Mistral model

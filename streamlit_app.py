@@ -768,24 +768,50 @@ with st.sidebar:
         st.rerun()
 
 def initialize_zera_system():
-    """Initialize the Zera AI system"""
+    """Initialize the Zera AI system with validation"""
     if 'zera_system' not in st.session_state:
-        settings = Settings()
-        agent_manager = AgentManager(settings)
-        workflow_orchestrator = WorkflowOrchestrator(agent_manager, settings)
-        learning_engine = ZeraLearningEngine(settings)
-        
-        st.session_state.zera_system = {
-            'settings': settings,
-            'agent_manager': agent_manager,
-            'workflow_orchestrator': workflow_orchestrator,
-            'learning_engine': learning_engine
-        }
+        try:
+            settings = Settings()
+            
+            # Validate API key
+            if not settings.api_key:
+                raise ValueError("API key not found. Please set API_KEY in Streamlit secrets or environment variables.")
+            
+            # Try to initialize components
+            agent_manager = AgentManager(settings)
+            workflow_orchestrator = WorkflowOrchestrator(agent_manager, settings)
+            learning_engine = ZeraLearningEngine(settings)
+            
+            st.session_state.zera_system = {
+                'settings': settings,
+                'agent_manager': agent_manager,
+                'workflow_orchestrator': workflow_orchestrator,
+                'learning_engine': learning_engine
+            }
+            
+        except Exception as e:
+            st.error(f"Failed to initialize ZERA system: {str(e)}")
+            
+            # Show setup instructions
+            st.markdown("### 🔧 Setup Instructions for Streamlit Cloud:")
+            st.markdown("1. Go to your app settings")
+            st.markdown("2. Click on 'Secrets'")
+            st.markdown("3. Add your API key:")
+            st.code('API_KEY = "your-api-key-here"')
+            st.markdown("4. Save and redeploy")
+            
+            # Return None to indicate failure
+            return None
+            
     return st.session_state.zera_system
 
 async def run_audit(contract_code: str, contract_name: str, audit_scope: str):
-    """Run the complete audit process"""
+    """Run the complete audit process with error handling"""
     zera_system = initialize_zera_system()
+    
+    # Check if initialization was successful
+    if zera_system is None:
+        raise ValueError("ZERA system not properly initialized. Check API configuration.")
     
     # Create agents with contract context
     await zera_system['agent_manager'].create_agents(contract_name, contract_code)
@@ -798,6 +824,54 @@ async def run_audit(contract_code: str, contract_name: str, audit_scope: str):
     )
     
     return results
+
+def create_demo_results(contract_code: str, contract_name: str) -> Dict[str, Any]:
+    """Create demo results when API is not available - for demonstration purposes"""
+    import time
+    
+    # Simulate audit time
+    time.sleep(2)
+    
+    # Mock results based on contract analysis
+    demo_results = {
+        "security_findings": [
+            {
+                "vulnerability_type": "Reentrancy Vulnerability",
+                "severity": "CRITICAL",
+                "description": "The contract contains a potential reentrancy vulnerability in withdrawal functions.",
+                "attack_scenario": "An attacker could exploit this by creating a malicious contract that calls back into the vulnerable function before the state is updated.",
+                "remediation": "Use the Checks-Effects-Interactions pattern or implement a reentrancy guard.",
+                "code_snippet": "function withdraw() public { /* vulnerable code */ }"
+            },
+            {
+                "vulnerability_type": "Access Control Issue",
+                "severity": "HIGH", 
+                "description": "Using tx.origin for authorization can be bypassed through contract intermediaries.",
+                "attack_scenario": "An attacker can trick a legitimate user into calling a malicious contract that then calls the vulnerable function.",
+                "remediation": "Use msg.sender instead of tx.origin for access control checks.",
+                "code_snippet": "require(tx.origin == owner)"
+            }
+        ],
+        "gas_optimizations": [
+            {
+                "optimization_type": "Storage Optimization",
+                "description": "Pack struct variables to use fewer storage slots and reduce gas costs.",
+                "estimated_gas_savings": "2100",
+                "implementation_difficulty": "Low",
+                "original_code": "uint256 value; bool flag; uint256 timestamp;",
+                "optimized_code": "uint256 value; uint256 timestamp; bool flag;"
+            }
+        ],
+        "overall_risk_score": 7.5,
+        "audit_duration_seconds": 2.5,
+        "learning_insights": {
+            "similar_contracts_analyzed": 45,
+            "common_vulnerabilities": ["Reentrancy", "Access Control", "Unchecked Calls"],
+            "gas_optimization_patterns": ["Storage Packing", "Loop Caching", "Function Visibility"]
+        }
+    }
+    
+    return demo_results
 
 def display_audit_results(results: Dict[str, Any]):
     """Display audit results in a structured format"""
@@ -987,6 +1061,17 @@ def main():
     st.markdown('<h1 class="main-header">🔒 ZERA - Smart Contract Security Auditor</h1>', unsafe_allow_html=True)
     st.markdown("### Advanced AI-Powered Smart Contract Analysis with Learning Capabilities")
     
+    # System status check
+    try:
+        settings = Settings()
+        if not settings.api_key:
+            st.warning("⚠️ **Demo Mode**: API key not configured. The app will run in demonstration mode with sample results.")
+            st.info("To enable full functionality, add your API key to Streamlit secrets: `API_KEY = \"your-key\"`")
+        else:
+            st.success("✅ **API Configured**: Full functionality available")
+    except Exception as e:
+        st.error(f"⚠️ Configuration issue: {str(e)}")
+    
     # Sidebar
     st.sidebar.title("🛠️ Control Panel")
     
@@ -1087,6 +1172,7 @@ contract Example {
                         
                         # Run actual audit
                         try:
+                            # First try the real audit
                             loop = asyncio.new_event_loop()
                             asyncio.set_event_loop(loop)
                             results = loop.run_until_complete(
@@ -1111,7 +1197,53 @@ contract Example {
                             st.success("🎉 Audit completed! Check results below.")
                             
                         except Exception as e:
-                            st.error(f"❌ Audit failed: {str(e)}")
+                            # Enhanced error reporting for deployment debugging
+                            import traceback
+                            error_details = traceback.format_exc()
+                            
+                            # Try demo mode as fallback
+                            st.warning("⚠️ API unavailable - Running in Demo Mode")
+                            try:
+                                status_text.text("🔄 Switching to demo mode...")
+                                results = create_demo_results(contract_code, contract_name)
+                                st.session_state.audit_results = results
+                                
+                                # Add to history
+                                audit_record = {
+                                    'contract_name': f"{contract_name} (Demo)",
+                                    'vulnerabilities_found': len(results.get('security_findings', [])),
+                                    'gas_optimizations': len(results.get('gas_optimizations', [])),
+                                    'risk_score': results.get('overall_risk_score', 0),
+                                    'timestamp': datetime.now(),
+                                    'audit_scope': audit_scope
+                                }
+                                st.session_state.audit_history.append(audit_record)
+                                
+                                progress_bar.progress(1.0)
+                                status_text.text("✅ Demo audit completed!")
+                                st.success("🎉 Demo mode completed! This shows sample results for demonstration.")
+                                st.info("ℹ️ To enable full functionality, please configure your API key in Streamlit secrets.")
+                                
+                            except Exception as demo_error:
+                                st.error(f"❌ Both API and demo mode failed: {str(demo_error)}")
+                                
+                            # Original error handling
+                            st.error(f"❌ Original error: {str(e)}")
+                            
+                            # Show more specific error information in development
+                            with st.expander("🔍 Error Details (for debugging)"):
+                                st.code(error_details)
+                                st.markdown("**Common Deployment Issues:**")
+                                st.markdown("- Missing API keys in Streamlit secrets")
+                                st.markdown("- Network connectivity issues")
+                                st.markdown("- Database initialization problems")
+                                st.markdown("- Import/dependency errors")
+                            
+                            # Check if it's an API key issue
+                            if "api_key" in str(e).lower() or "unauthorized" in str(e).lower():
+                                st.warning("🔑 **API Key Issue Detected**: Please add your API key to Streamlit secrets")
+                                st.info("Go to your app settings → Secrets → Add: `API_KEY = \"your-api-key\"`")
+                            
                             st.info("💡 Tip: Make sure your contract code is valid Solidity")
         
         with col2:
