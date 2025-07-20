@@ -10,6 +10,88 @@ ZERA is an advanced AI-powered tool for comprehensive smart contract auditing, f
 - **Memory System**: Persistent learning and memory storage for improved analysis over time
 - **Real-time Analysis**: Immediate feedback and detailed reporting
 
+## 🧠 Architecture & Process Flows
+
+### Agentic Flow with Learning
+
+```mermaid
+flowchart TD
+    A[User uploads/pastes smart contract] --> B[Streamlit UI receives input]
+    B --> C[Workflow Orchestrator]
+    C --> D[Security Analysis Agent]
+    C --> E[Gas Optimization Agent]
+    D --> F[Security Findings]
+    E --> G[Gas Optimization Findings]
+    F & G --> H[Results Aggregator]
+    H --> I[Streamlit UI displays results]
+    I --> J[User reviews vulnerabilities & optimizations]
+    J --> K{User feedback or new findings?}
+    K -- Yes --> L[Memory System / Learning Engine updates knowledge base]
+    L --> C
+    K -- No --> M[End]
+```
+
+**How the Agent Learns:**
+- After each analysis, the agent stores new vulnerabilities, optimizations, and user feedback in a persistent memory system.
+- This knowledge base is referenced in future analyses to improve detection, avoid false positives, and provide more relevant recommendations.
+- The learning engine adapts over time, enabling the agent to recognize new patterns and edge cases based on historical data and user interactions.
+
+### Vulnerability Finding Flow (Detailed, All Cases)
+
+```mermaid
+flowchart TD
+    A[Input: Solidity contract] --> B[Preprocessing & Normalization]
+    B --> C[Security Analysis Agent]
+    C --> D{Is contract valid?}
+    D -- No --> E[Return error: Invalid contract]
+    D -- Yes --> F[Run static analysis]
+    F --> G[Pattern-based vulnerability detection]
+    F --> H[AI/ML-based vulnerability detection]
+    G & H --> I[Aggregate findings]
+    I --> J{Findings found?}
+    J -- No --> K[Return: No vulnerabilities found]
+    J -- Yes --> L[Classify by severity]
+    L --> M[Map to code locations]
+    M --> N[Generate recommendations]
+    N --> O[Format for UI]
+    O --> P[Return detailed vulnerability report]
+    subgraph Edge Cases
+        Q1[Malformed code] --> E
+        Q2[Obfuscated code] --> F
+        Q3[Unusual patterns] --> H
+        Q4[Multiple contracts] --> F
+        Q5[Unsupported Solidity version] --> E
+    end
+```
+
+### Gas Optimization Flow (Detailed, All Cases)
+
+```mermaid
+flowchart TD
+    A[Input: Solidity contract] --> B[Preprocessing & Normalization]
+    B --> C[Gas Optimization Agent]
+    C --> D{Is contract valid?}
+    D -- No --> E[Return error: Invalid contract]
+    D -- Yes --> F[Run static gas analysis]
+    F --> G[Pattern-based gas inefficiency detection]
+    F --> H[AI/ML-based gas optimization suggestions]
+    G & H --> I[Aggregate optimizations]
+    I --> J{Optimizations found?}
+    J -- No --> K[Return: No optimizations found]
+    J -- Yes --> L[Estimate gas savings]
+    L --> M[Map to code locations]
+    M --> N[Generate before/after code snippets]
+    N --> O[Format for UI]
+    O --> P[Return detailed gas optimization report]
+    subgraph Edge Cases
+        Q1[Obfuscated/complex code] --> H
+        Q2[Multiple contracts] --> F
+        Q3[Unsupported patterns] --> H
+        Q4[Already optimized code] --> K
+        Q5[Unusual data types/loops] --> G
+    end
+```
+
 ## 🛠️ Installation
 
 ### Prerequisites
