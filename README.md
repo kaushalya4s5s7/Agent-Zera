@@ -265,30 +265,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 This tool is for educational and analysis purposes. Always conduct thorough manual reviews and testing before deploying smart contracts to production environments.
 
-### Agentic Auditing Concepts - Theoretical Overview
 
-```mermaid
-flowchart TD
-    A[Audit Initiation]
-    A --> B[Scope Definition and Threat Modeling]
-    B --> C[Knowledge Base Reference: Memory, Past Audits, Standards]
-    C --> D[Code Ingestion and Preprocessing]
-    D --> E[Analysis Phase]
-    E --> F1[Static Analysis: Pattern Matching, Linting, Symbolic Execution]
-    E --> F2[Dynamic Analysis: Simulation, Fuzzing, Runtime Monitoring]
-    E --> F3[AI/ML Reasoning: Anomaly Detection, Novel Pattern Discovery]
-    F1 & F2 & F3 --> G[Findings Aggregation]
-    G --> H[Problem Identification]
-    H --> I1[Vulnerability Classification: Severity, Type, Impact]
-    H --> I2[Gas Inefficiency Classification: Pattern, Impact, Savings]
-    I1 & I2 --> J[Remediation and Recommendation Generation]
-    J --> K[Report Compilation: Human-Readable, Actionable]
-    K --> L[User Review and Feedback]
-    L --> M[Learning and Knowledge Base Update]
-    M --> C
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style M fill:#bbf,stroke:#333,stroke-width:2px
-```
 
 **Concepts Illustrated:**
 - **Initiation:** Audit begins with scope and threat modeling.
