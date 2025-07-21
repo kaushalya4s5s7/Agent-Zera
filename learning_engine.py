@@ -218,6 +218,58 @@ class ZeraLearningEngine:
                 "average_optimizations_per_audit": avg_stats[2] if avg_stats[2] else 0
             }
     
+    async def retrain(self, learning_rate: float, pattern_threshold: float, enable_auto_learning: bool, save_patterns: bool) -> Dict[str, Any]:
+        """Retrain the learning engine with new configuration values"""
+        async with aiosqlite.connect(self.db_path) as db:
+            # Example: update all pattern detection accuracies based on new threshold
+            await db.execute("""
+                UPDATE contract_patterns
+                SET detection_accuracy = CASE
+                    WHEN detection_accuracy < ? THEN detection_accuracy * ?
+                    ELSE detection_accuracy * (1 + ?/10.0)
+                END,
+                    last_updated = CURRENT_TIMESTAMP
+            """, (pattern_threshold, learning_rate, learning_rate))
+            await db.commit()
+        # Optionally, log retrain event or refresh stats
+        return {
+            "status": "retrained",
+            "learning_rate": learning_rate,
+            "pattern_threshold": pattern_threshold,
+            "auto_learning": enable_auto_learning,
+            "save_patterns": save_patterns
+        }
+    
+    async def get_recent_learnings(self) -> Dict[str, Any]:
+        """Fetch recent common vulnerabilities and gas optimization patterns from the database."""
+        async with aiosqlite.connect(self.db_path) as db:
+            # Fetch most common vulnerabilities
+            cursor = await db.execute("""
+                SELECT vulnerability_type, COUNT(*) as count
+                FROM audit_findings
+                GROUP BY vulnerability_type
+                ORDER BY count DESC
+                LIMIT 5
+            """)
+            vulns = await cursor.fetchall()
+            common_vulnerabilities = [v[0] for v in vulns]
+
+            # Fetch most common gas optimization patterns
+            cursor = await db.execute("""
+                SELECT optimization_type, COUNT(*) as count
+                FROM gas_optimizations
+                GROUP BY optimization_type
+                ORDER BY count DESC
+                LIMIT 5
+            """)
+            gas_patterns = await cursor.fetchall()
+            gas_optimization_patterns = [g[0] for g in gas_patterns]
+
+        return {
+            "common_vulnerabilities": common_vulnerabilities,
+            "gas_optimization_patterns": gas_optimization_patterns
+        }
+    
     def _generate_session_id(self) -> str:
         """Generate unique session ID"""
         return f"zera_audit_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{hash(datetime.now()) % 10000}"

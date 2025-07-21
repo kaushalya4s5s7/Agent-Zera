@@ -15,6 +15,7 @@ import streamlit as st
 import asyncio
 import json
 import time
+import aiosqlite
 from datetime import datetime
 import pandas as pd
 import plotly.express as px
@@ -1017,6 +1018,9 @@ def display_audit_results(results: Dict[str, Any]):
             for pattern in insights['gas_optimization_patterns']:
                 st.markdown(f"<p style='color: #1a1a1a; margin-left: 20px;'>• {pattern}</p>", unsafe_allow_html=True)
 
+
+                
+
 def display_audit_history():
     """Display audit history and analytics"""
     st.subheader("📊 Audit History & Analytics")
@@ -1299,51 +1303,81 @@ contract VulnerableToken {
     
     elif page == "🧠 Learning Engine":
         st.header("Agent Learning Engine")
-        
+        zera_system = initialize_zera_system()
+        learning_engine = zera_system['learning_engine'] if zera_system else None
+        # Remove any local import asyncio
+        def fetch_learning_stats_sync():
+            return asyncio.run(learning_engine.get_audit_statistics()) if learning_engine else None
+        def fetch_recent_learnings_sync():
+            # Fetch recent learnings directly from the database using the backend
+            if learning_engine:
+                recent_learnings = asyncio.run(learning_engine.get_recent_learnings())
+                recent_vulns = recent_learnings.get('common_vulnerabilities', [])
+                recent_gas_patterns = recent_learnings.get('gas_optimization_patterns', [])
+                return recent_vulns, recent_gas_patterns
+            return [], []
+        stats = fetch_learning_stats_sync()
+        recent_vulns, recent_gas_patterns = fetch_recent_learnings_sync()
         col1, col2 = st.columns(2)
-        
         with col1:
             st.subheader("📈 Learning Statistics")
-            
-            # Mock learning stats
-            learning_stats = {
-                "Patterns Learned": 156,
-                "Contracts Analyzed": 89,
-                "Accuracy Improvement": "23%",
-                "Knowledge Base Size": "2.3 MB"
-            }
-            
-            for stat, value in learning_stats.items():
-                st.metric(stat, value)
-        
+            if stats:
+                st.metric("Patterns Learned", stats.get("total_audits_performed", 0))
+                st.metric("Avg. Vulnerabilities", f"{stats.get('average_vulnerabilities_per_audit', 0):.1f}")
+                st.metric("Avg. Optimizations", f"{stats.get('average_optimizations_per_audit', 0):.1f}")
+                st.metric("Avg. Risk Score", f"{stats.get('average_risk_score', 0):.2f}")
+            else:
+                st.info("No learning statistics available yet.")
         with col2:
             st.subheader("🎯 Recent Learnings")
-            
-            recent_learnings = [
-                "Reentrancy pattern in withdraw functions",
-                "Gas optimization: Storage slot packing",
-                "Access control bypass via tx.origin",
-                "Flash loan vulnerability pattern"
-            ]
-            
-            for learning in recent_learnings:
-                st.markdown(f"<p style='color: #1a1a1a;'>• {learning}</p>", unsafe_allow_html=True)
-        
+            if recent_vulns:
+                st.markdown("<strong>Common Vulnerabilities:</strong>", unsafe_allow_html=True)
+                for learning in recent_vulns:
+                    st.markdown(f"<p style='color: #1a1a1a;'>• {learning}</p>", unsafe_allow_html=True)
+            if recent_gas_patterns:
+                st.markdown("<strong>Gas Optimization Patterns:</strong>", unsafe_allow_html=True)
+                for pattern in recent_gas_patterns:
+                    st.markdown(f"<p style='color: #1a1a1a;'>• {pattern}</p>", unsafe_allow_html=True)
+            if not recent_vulns and not recent_gas_patterns:
+                st.info("No recent learnings available yet.")
         st.subheader("🔄 Learning Configuration")
-        
         col1, col2 = st.columns(2)
         with col1:
             learning_rate = st.slider("Learning Rate", 0.1, 1.0, 0.7)
             pattern_threshold = st.slider("Pattern Recognition Threshold", 0.5, 0.95, 0.8)
-        
         with col2:
             enable_auto_learning = st.checkbox("Enable Auto-Learning", True)
             save_patterns = st.checkbox("Save New Patterns", True)
-        
         if st.button("🔄 Retrain Learning Models"):
-            with st.spinner("Retraining learning models..."):
-                time.sleep(3)
-                st.success("✅ Learning models retrained successfully!")
+            with st.spinner("Retraining learning models and refreshing stats..."):
+                if learning_engine:
+                    # Fetch stats before retraining
+                    async def get_pattern_stats():
+                        async with aiosqlite.connect(learning_engine.db_path) as db:
+                            cursor = await db.execute("SELECT COUNT(*), AVG(detection_accuracy) FROM contract_patterns")
+                            count, avg_acc = await cursor.fetchone()
+                            return count, avg_acc
+                    before_count, before_acc = asyncio.run(get_pattern_stats())
+                    # Call backend retrain method with config values
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    retrain_result = loop.run_until_complete(
+                        learning_engine.retrain(
+                            learning_rate=learning_rate,
+                            pattern_threshold=pattern_threshold,
+                            enable_auto_learning=enable_auto_learning,
+                            save_patterns=save_patterns
+                        )
+                    )
+                    # Fetch stats after retraining
+                    after_count, after_acc = asyncio.run(get_pattern_stats())
+                    # Show before/after stats
+                    st.info(f"Patterns: {before_count} → {after_count}, Avg. Accuracy: {before_acc:.3f} → {after_acc:.3f}")
+                    st.info(f"Retrain result: {retrain_result}")
+                    # Refresh stats and recent learnings after retraining
+                    stats = asyncio.run(learning_engine.get_audit_statistics())
+                    recent_vulns, recent_gas_patterns = fetch_recent_learnings_sync()
+                st.success("✅ Learning models retrained and stats refreshed!")
     
     elif page == "⚙️ Settings":
         st.header("System Configuration")
@@ -1365,7 +1399,7 @@ contract VulnerableToken {
                 help="Higher values make analysis more creative, lower values more precise"
             )
             
-            max_retries = st.number_input("Max Retries", 1, 10, 3)
+            max_retries = st.number_input("MaxRetries", 1, 10, 3)
         
         with col2:
             st.subheader("🔧 Audit Settings")
