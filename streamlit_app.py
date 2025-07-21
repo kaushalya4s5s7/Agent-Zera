@@ -28,6 +28,10 @@ from workflow_orchestrator import WorkflowOrchestrator
 from settings import Settings
 from learning_engine import ZeraLearningEngine
 
+# Ensure database initialization at app startup
+from init_database import init_database
+
+
 # Page configuration
 st.set_page_config(
     page_title="🔒 ZERA - Smart Contract Security Auditor",
@@ -1307,7 +1311,7 @@ contract VulnerableToken {
         learning_engine = zera_system['learning_engine'] if zera_system else None
         if learning_engine:
             import asyncio
-            asyncio.run(learning_engine.initialize_database())
+            asyncio.run(learning_engine.init_database())
         # Remove any local import asyncio
         def fetch_learning_stats_sync():
             return asyncio.run(learning_engine.get_audit_statistics()) if learning_engine else None
