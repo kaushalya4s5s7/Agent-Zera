@@ -483,7 +483,7 @@ st.markdown("""
     .stSelectbox > div > div > div[role="listbox"] > div[aria-selected="true"],
     .stSelectbox [data-baseweb="popover"] [data-baseweb="menu"] [role="option"][aria-selected="true"] {
         background-color: #dbeafe !important;
-        color: #1e3a8a !important;
+        color: #1e293b !important;
         font-weight: 700 !important;
     }
     
@@ -577,7 +577,7 @@ st.markdown("""
     .css-1d391kg .stSelectbox [data-baseweb="popover"] [data-baseweb="menu"] [role="option"]:hover,
     [data-testid="stSidebar"] .stSelectbox [data-baseweb="popover"] [data-baseweb="menu"] [role="option"]:hover {
         background-color: #f3f4f6 !important;
-        color: #1e3a8a !important;
+        color: #1e293b !important;
         font-weight: 600 !important;
     }
     
@@ -585,7 +585,7 @@ st.markdown("""
     .css-1d391kg .stSelectbox [data-baseweb="popover"] [data-baseweb="menu"] [role="option"][aria-selected="true"],
     [data-testid="stSidebar"] .stSelectbox [data-baseweb="popover"] [data-baseweb="menu"] [role="option"][aria-selected="true"] {
         background-color: #dbeafe !important;
-        color: #1e3a8a !important;
+        color: #1e293b !important;
         font-weight: 700 !important;
     }
     
@@ -1305,6 +1305,9 @@ contract VulnerableToken {
         st.header("Agent Learning Engine")
         zera_system = initialize_zera_system()
         learning_engine = zera_system['learning_engine'] if zera_system else None
+        if learning_engine:
+            import asyncio
+            asyncio.run(learning_engine.initialize_database())
         # Remove any local import asyncio
         def fetch_learning_stats_sync():
             return asyncio.run(learning_engine.get_audit_statistics()) if learning_engine else None
