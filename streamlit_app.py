@@ -2,18 +2,6 @@ import asyncio
 from init_database import init_database
 asyncio.run(init_database())
 
-"""
-🔒 ZERA - Advanced Smart Contract Security Auditing System
-Streamlit Web Interface for Interactive Smart Contract Analysis
-
-Features:
-- Interactive contract code input
-- Real-time security analysis
-- Gas optimization recommendations
-- Learning from past audits
-- Comprehensive audit reports
-- Agent performance analytics
-"""
 
 import streamlit as st
 import asyncio
@@ -1309,10 +1297,7 @@ contract VulnerableToken {
         st.header("Agent Learning Engine")
         zera_system = initialize_zera_system()
         learning_engine = zera_system['learning_engine'] if zera_system else None
-        if learning_engine:
-            import asyncio
-            asyncio.run(learning_engine.initialize_database())
-        # Remove any local import asyncio
+        # Removed redundant database initialization
         def fetch_learning_stats_sync():
             return asyncio.run(learning_engine.get_audit_statistics()) if learning_engine else None
         def fetch_recent_learnings_sync():
