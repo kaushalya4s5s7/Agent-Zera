@@ -257,9 +257,9 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🔗 Links
 
-- [Documentation](./PARSING_IMPROVEMENTS.md)
-- [Gas Optimization Guide](./GAS_OPTIMIZATION_ENHANCEMENTS.md)
-- [Issue Tracker](https://github.com/yourusername/AI-AGENT/issues)
+- [Demo video](https://www.youtube.com/watch?v=s950c8YahV8)
+- [Pitch_Deck](https://drive.google.com/file/d/10mu0KP8b9OpMWnbrYAmFPVYiXEz1dqAp/view)
+  
 
 ## ⚠️ Disclaimer
 
